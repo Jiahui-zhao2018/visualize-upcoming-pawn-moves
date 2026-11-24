@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Upcoming Pawn Moves</title>
+  </head>
+  <body>
+    <header class="app-header">
+      <h1>Upcoming Pawn Moves</h1>
+      <p class="subtitle">Step through a recorded game and see each side’s next pawn move.</p>
+    </header>
+
+    <main class="layout">
+      <section class="panel input-panel" aria-labelledby="pgn-heading">
+        <h2 id="pgn-heading">PGN</h2>
+        <label for="pgn-input" class="visually-hidden">PGN text</label>
+        <textarea id="pgn-input" spellcheck="false" rows="14" placeholder="Paste a PGN game here…"></textarea>
+        <div class="row">
+          <button id="load-btn" type="button" class="primary">Load game</button>
+          <button id="example-btn" type="button">Insert example</button>
+        </div>
+        <div id="message" class="message" role="status" aria-live="polite"></div>
+      </section>
+
+      <section class="panel board-panel" aria-label="Board">
+        <div class="board-wrap">
+          <div id="board" class="cg-wrap"></div>
+          <svg id="overlay" class="overlay" aria-hidden="true"></svg>
+        </div>
+        <div class="controls" role="group" aria-label="Navigation">
+          <button id="first-btn" type="button" title="Starting position (Home)" aria-label="Go to starting position">⏮</button>
+          <button id="prev-btn" type="button" title="Back one ply (←)" aria-label="Back one ply">◀</button>
+          <button id="next-btn" type="button" title="Forward one ply (→)" aria-label="Forward one ply">▶</button>
+          <button id="last-btn" type="button" title="Final position (End)" aria-label="Go to final position">⏭</button>
+          <button id="flip-btn" type="button" title="Flip board (F)">Flip board</button>
+        </div>
+        <div id="position-label" class="position-label"></div>
+      </section>
+
+      <section class="panel side-panel">
+        <h2>Next pawn moves</h2>
+        <dl class="next-moves">
+          <dt><span class="swatch swatch-w"></span>White</dt>
+          <dd id="next-w">—</dd>
+          <dt><span class="swatch swatch-b"></span>Black</dt>
+          <dd id="next-b">—</dd>
+        </dl>
+
+        <h2>Moves</h2>
+        <ol id="move-list" class="move-list" aria-label="Move list"></ol>
+
+        <h2>Legend</h2>
+        <div class="legend">
+          <div class="legend-row"><span class="legend-arrow legend-arrow-w"></span> White’s next pawn move</div>
+          <div class="legend-row"><span class="legend-arrow legend-arrow-b"></span> Black’s next pawn move</div>
+          <p class="legend-note">A dashed, see-through pawn marks the destination square. It is an overlay, not a piece. On an occupied square it shrinks to a corner badge.</p>
+          <div id="legend-opacity" class="legend-opacity"></div>
+        </div>
+      </section>
+    </main>
+
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>
