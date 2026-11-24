@@ -32,6 +32,10 @@ const els = {
   last: $('last-btn'),
   flip: $('flip-btn'),
   positionLabel: $('position-label'),
+  fenOutput: $('fen-output'),
+  copyFen: $('copy-fen-btn'),
+  copyStatus: $('copy-status'),
+  showFens: $('show-fens'),
   nextW: $('next-w'),
   nextB: $('next-b'),
   moveList: $('move-list'),
@@ -105,6 +109,10 @@ els.flip.addEventListener('click', () => {
   state.orientation = state.orientation === 'white' ? 'black' : 'white';
   render();
 });
+els.copyFen.addEventListener('click', copyCurrentFen);
+els.showFens.addEventListener('change', () => {
+  els.moveList.classList.toggle('show-fens', els.showFens.checked);
+});
 els.moveList.addEventListener('click', (e) => {
   const btn = e.target.closest('[data-ply]');
   if (btn) goTo(Number(btn.dataset.ply));
@@ -149,6 +157,8 @@ function render() {
   });
   renderOverlay(els.overlay, shapes);
 
+  els.fenOutput.textContent = fen;
+  els.copyStatus.textContent = '';
   renderNextMoves(indicators);
   renderNavigation();
   highlightMoveList(indicators);
@@ -202,7 +212,8 @@ function renderMoveList() {
 
   const startLi = document.createElement('li');
   startLi.className = 'move-row start-row';
-  startLi.appendChild(moveButton(0, 'Start'));
+  startLi.appendChild(moveButton(0, 'Start', game.startFen));
+  startLi.appendChild(fenLine(0, 'Start', game.startFen));
   els.moveList.appendChild(startLi);
 
   let row = null;
@@ -222,19 +233,65 @@ function renderMoveList() {
       }
       els.moveList.appendChild(row);
     }
-    const btn = moveButton(ply.index + 1, ply.san);
+    const btn = moveButton(ply.index + 1, ply.san, ply.fenAfter);
     if (ply.isPawnMove) btn.classList.add('pawn-move');
-    row.appendChild(btn);
+    // Buttons first, FEN lines after them, so the grid keeps moves on one row.
+    row.insertBefore(btn, row.querySelector('.fen-line'));
+    const label = `${ply.moveNumber}${ply.color === 'w' ? '.' : '…'} ${ply.san}`;
+    row.appendChild(fenLine(ply.index + 1, label, ply.fenAfter));
   }
 }
 
-function moveButton(plyCount, text) {
+function moveButton(plyCount, text, fen) {
   const btn = document.createElement('button');
   btn.type = 'button';
   btn.className = 'move';
   btn.dataset.ply = String(plyCount);
+  btn.title = `FEN: ${fen}`;
   btn.textContent = text;
   return btn;
+}
+
+/** FEN of a position in the move list; shown when “Show FENs” is checked. */
+function fenLine(plyCount, label, fen) {
+  const line = document.createElement('div');
+  line.className = 'fen-line';
+  line.dataset.fenPly = String(plyCount);
+  const name = document.createElement('span');
+  name.className = 'fen-line-label';
+  name.textContent = `${label}:`;
+  const code = document.createElement('code');
+  code.textContent = fen;
+  line.append(name, ' ', code);
+  return line;
+}
+
+async function copyCurrentFen() {
+  const fen = els.fenOutput.textContent;
+  let ok = false;
+  try {
+    await navigator.clipboard.writeText(fen);
+    ok = true;
+  } catch {
+    // Fallback for browsers/contexts without the async clipboard API.
+    selectFenText();
+    try {
+      ok = document.execCommand('copy');
+    } catch {
+      ok = false;
+    }
+  }
+  els.copyStatus.textContent = ok ? 'FEN copied to clipboard.' : 'Could not copy automatically; the FEN is selected, press Ctrl+C / ⌘C.';
+  els.copyStatus.dataset.kind = ok ? 'ok' : 'error';
+  if (!ok) selectFenText();
+}
+
+function selectFenText() {
+  const range = document.createRange();
+  range.selectNodeContents(els.fenOutput);
+  const selection = window.getSelection();
+  selection.removeAllRanges();
+  selection.addRange(range);
 }
 
 function highlightMoveList(indicators) {
@@ -242,6 +299,7 @@ function highlightMoveList(indicators) {
     const plyCount = Number(btn.dataset.ply);
     const current = plyCount === state.ply;
     btn.classList.toggle('current', current);
+    els.moveList.querySelector(`[data-fen-ply="${plyCount}"]`)?.classList.toggle('current', current);
     if (current) btn.setAttribute('aria-current', 'step');
     else btn.removeAttribute('aria-current');
     btn.classList.toggle('next-pawn-w', indicators.w?.plyIndex === plyCount - 1);

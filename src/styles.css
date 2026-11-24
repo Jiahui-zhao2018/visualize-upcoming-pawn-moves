@@ -89,6 +89,41 @@ button.primary:hover { background: #244a6f; }
 .controls button { min-width: 44px; }
 .position-label { margin-top: 8px; color: var(--muted); font-size: 0.9rem; text-align: center; }
 
+.fen-box { display: flex; gap: 8px; align-items: center; margin-top: 10px; width: var(--board-size); }
+.fen-label { font-weight: 600; font-size: 0.9rem; }
+.fen-output {
+  flex: 1;
+  min-width: 0;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.95rem;
+  padding: 6px 10px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: #faf9f7;
+  overflow-wrap: anywhere;
+  user-select: all;
+}
+.copy-status { min-height: 1.2em; font-size: 0.85rem; margin-top: 4px; color: var(--ok); }
+.copy-status[data-kind='error'] { color: var(--error); }
+
+.moves-heading { display: flex; align-items: baseline; justify-content: space-between; margin-top: 16px; }
+.moves-heading h2 { margin: 0 0 8px; }
+.fen-toggle { font-size: 0.85rem; color: var(--muted); }
+.fen-line {
+  display: none;
+  grid-column: 1 / -1;
+  padding: 1px 8px 3px 3em;
+  font-size: 0.75rem;
+  color: var(--muted);
+  word-break: break-all;
+}
+.start-row .fen-line { padding-left: 8px; }
+.fen-line-label { white-space: nowrap; }
+.fen-line.current { color: var(--text); }
+.fen-line.current code { background: #e3ebf3; }
+.move-list.show-fens .fen-line { display: block; }
+.move-list.show-fens { max-height: 420px; }
+
 .next-moves { display: grid; grid-template-columns: auto 1fr; gap: 4px 10px; margin: 0; font-size: 0.9rem; }
 .next-moves dt { font-weight: 600; display: flex; align-items: center; gap: 6px; }
 .next-moves dd { margin: 0; }

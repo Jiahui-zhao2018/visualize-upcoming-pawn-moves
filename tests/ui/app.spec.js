@@ -60,9 +60,9 @@ test('example game: indicators, distances and stepping back', async ({ page }) =
 
   // Move list click and keyboard navigation.
   await page.click('#move-list [data-ply="2"]');
-  await expect(page.locator('#move-list .current')).toHaveText('Nf6');
+  await expect(page.locator('#move-list .move.current')).toHaveText('Nf6');
   await page.locator('body').press('ArrowLeft');
-  await expect(page.locator('#move-list .current')).toHaveText('Nf3');
+  await expect(page.locator('#move-list .move.current')).toHaveText('Nf3');
 });
 
 test('flip board keeps indicators and mirrors their geometry', async ({ page }) => {
@@ -134,4 +134,54 @@ test('both sides targeting the same square stay distinguishable', async ({ page 
   expect(await indicators(page)).toEqual({ w: { opacity: 0.4, mode: 'shared' }, b: { opacity: 0.6, mode: 'shared' } });
   await page.waitForTimeout(300);
   await page.screenshot({ path: 'test-results/shared.png' });
+});
+
+test('FEN display follows navigation and can be copied', async ({ page, context }) => {
+  await context.grantPermissions(['clipboard-read', 'clipboard-write']);
+  await load(page, '1. e4 Nf6 2. e5 d5 3. exd6 exd6 4. Nf3 Be7 5. Bc4 O-O 6. O-O *');
+  const fen = page.locator('#fen-output');
+  await expect(fen).toHaveText('rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1');
+
+  for (let i = 0; i < 4; i++) await page.click('#next-btn');
+  await expect(fen).toHaveText('rnbqkb1r/ppp1pppp/5n2/3pP3/8/8/PPPP1PPP/RNBQKBNR w KQkq d6 0 3');
+  await page.click('#next-btn'); // exd6 e.p.
+  await expect(fen).toHaveText('rnbqkb1r/ppp1pppp/3P1n2/8/8/8/PPPP1PPP/RNBQKBNR b KQkq - 0 3');
+  await page.click('#prev-btn');
+  await expect(fen).toHaveText('rnbqkb1r/ppp1pppp/5n2/3pP3/8/8/PPPP1PPP/RNBQKBNR w KQkq d6 0 3');
+
+  await page.click('#last-btn'); // after both sides castled
+  await expect(fen).toHaveText('rnbq1rk1/ppp1bppp/3p1n2/8/2B5/5N2/PPPP1PPP/RNBQ1RK1 b - - 5 6');
+  await page.click('#prev-btn');
+  await expect(fen).toHaveText('rnbq1rk1/ppp1bppp/3p1n2/8/2B5/5N2/PPPP1PPP/RNBQK2R w KQ - 4 6');
+
+  await page.click('#copy-fen-btn');
+  await expect(page.locator('#copy-status')).toHaveText('FEN copied to clipboard.');
+  expect(await page.evaluate(() => navigator.clipboard.readText())).toBe(
+    'rnbq1rk1/ppp1bppp/3p1n2/8/2B5/5N2/PPPP1PPP/RNBQK2R w KQ - 4 6',
+  );
+
+  // Move list: FENs hidden until toggled; one per position incl. the start.
+  const lines = page.locator('#move-list .fen-line');
+  await expect(lines).toHaveCount(12);
+  await expect(lines.first()).toBeHidden();
+  await page.check('#show-fens');
+  await expect(lines.first()).toBeVisible();
+  await expect(lines.first()).toHaveText(/Start: rnbqkbnr\/pppppppp\/8\/8\/8\/8\/PPPPPPPP\/RNBQKBNR w KQkq - 0 1/);
+  await expect(page.locator('#move-list [data-fen-ply="5"]')).toHaveText(/3\. exd6: .* b KQkq - 0 3/);
+  await expect(page.locator('#move-list .fen-line.current')).toHaveAttribute('data-fen-ply', '10');
+  await expect(page.locator('#move-list [data-ply="10"]')).toHaveAttribute('title', /FEN: .* w KQ - 4 6/);
+  await page.waitForTimeout(300);
+  await page.screenshot({ path: 'test-results/fens.png' });
+});
+
+test('FEN display with a custom starting position and promotion', async ({ page }) => {
+  await load(page, '[SetUp "1"]\n[FEN "4k3/P7/8/8/8/8/7p/4K3 w - - 7 40"]\n\n40. a8=Q+ Kd7 41. Kd2 h1=N *');
+  const fen = page.locator('#fen-output');
+  await expect(fen).toHaveText('4k3/P7/8/8/8/8/7p/4K3 w - - 7 40');
+  await page.click('#next-btn');
+  await expect(fen).toHaveText('Q3k3/8/8/8/8/8/7p/4K3 b - - 0 40');
+  await page.click('#last-btn');
+  await expect(fen).toHaveText('Q7/3k4/8/8/8/8/3K4/7n w - - 0 42');
+  await page.click('#first-btn');
+  await expect(fen).toHaveText('4k3/P7/8/8/8/8/7p/4K3 w - - 7 40');
 });

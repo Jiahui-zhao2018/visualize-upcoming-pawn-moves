@@ -41,13 +41,24 @@ To build a static bundle instead: `npm run build`, then `npm run preview`
 | Flip board | Flip board | F |
 | Jump to a position | click a move in the move list | |
 
+### FEN display
+
+The full FEN of the displayed position is shown below the board and updates
+on every step. **Copy FEN** puts it on the clipboard. In the move list, hover
+a move to see the FEN after it, or tick **Show FENs** to list the FEN of every
+position, the starting position included. All FENs come from chess.js and
+include the side to move, castling rights, en passant target, halfmove clock
+and fullmove number. With a `[FEN]` tag, the game starts from that position
+and its clocks carry on from there.
+
 The move list highlights the current position. Pawn moves are bold, and the
 move each indicator points at is underlined in that side's colour.
 
 ## Tests
 
-Unit tests (Vitest) for PGN parsing, finding the next pawn move, opacity and
-indicator layout:
+Unit tests (Vitest) for PGN parsing, FEN generation (castling, en passant,
+promotion, custom start), finding the next pawn move, opacity and indicator
+layout:
 
 ```bash
 npm test
@@ -55,7 +66,8 @@ npm test
 
 UI tests (Playwright, Chromium). They start the dev server automatically and
 check the example game from the specification, stepping backward, flipping,
-captures, promotion, overlapping indicators and invalid input:
+captures, promotion, overlapping indicators, the FEN display and copy
+button, and invalid input:
 
 ```bash
 npm run test:ui
@@ -102,6 +114,11 @@ Distance is counted in plies: with `n` plies played, a pawn move at ply index
 - Custom starting positions are supported through the `[FEN "..."]` tag (with
   `[SetUp "1"]`) as handled by chess.js. Chess960 castling notation is not
   supported.
+- FENs follow chess.js: the en passant square is written only when an en
+  passant capture is actually possible (as lichess and Stockfish do), not
+  after every two-square pawn move. After `1. e4` the field is `-`, not `e3`.
+- Copying uses the browser clipboard API. If the browser blocks it, the FEN is
+  selected so it can be copied with Ctrl+C / ⌘C.
 - Move legality is checked by chess.js; a PGN with an illegal or ambiguous move
   is rejected as a whole, with the offending move named in the error message.
 - Input that contains no tag pairs and no moves (e.g. plain prose) is rejected.

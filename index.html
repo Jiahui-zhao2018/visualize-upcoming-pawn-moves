@@ -36,6 +36,12 @@
           <button id="flip-btn" type="button" title="Flip board (F)">Flip board</button>
         </div>
         <div id="position-label" class="position-label"></div>
+        <div class="fen-box">
+          <span id="fen-label" class="fen-label">FEN</span>
+          <code id="fen-output" class="fen-output" aria-labelledby="fen-label"></code>
+          <button id="copy-fen-btn" type="button" title="Copy the current FEN to the clipboard">Copy FEN</button>
+        </div>
+        <div id="copy-status" class="copy-status" role="status" aria-live="polite"></div>
       </section>
 
       <section class="panel side-panel">
@@ -47,7 +53,10 @@
           <dd id="next-b">—</dd>
         </dl>
 
-        <h2>Moves</h2>
+        <div class="moves-heading">
+          <h2>Moves</h2>
+          <label class="fen-toggle"><input id="show-fens" type="checkbox" /> Show FENs</label>
+        </div>
         <ol id="move-list" class="move-list" aria-label="Move list"></ol>
 
         <h2>Legend</h2>
